@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SULKY MASTERS - Grand Prix</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="setup-screen">
+        <div class="setup-content">
+            <h1>SULKY MASTERS</h1>
+            <p>Entrez les noms des drivers :</p>
+            <div class="input-group">
+                <label class="p1-color">Joueur 1 (Rouges)</label>
+                <input type="text" id="input-p1" placeholder="Thomas" maxlength="10">
+            </div>
+            <div class="input-group">
+                <label class="p2-color">Joueur 2 (Bleus)</label>
+                <input type="text" id="input-p2" placeholder="Sarah" maxlength="10">
+            </div>
+            <button id="btn-start-game" class="btn-action">ENTRER EN PISTE</button>
+        </div>
+    </div>
+
+    <div id="game-wrapper" class="hidden">
+        
+        <div id="top-bar">
+            <h1>Sulky Masters <span class="subtitle">GRAND PRIX</span></h1>
+            <div class="score-display">
+                <span class="p1-text"><span id="score-name-p1">J1</span> : <span id="score-p1">0</span></span>
+                <span class="separator">|</span>
+                <span class="p2-text"><span id="score-name-p2">J2</span> : <span id="score-p2">0</span></span>
+            </div>
+        </div>
+
+        <div id="main-layout">
+            <div id="left-column">
+                <div id="side-stables">
+                    <div id="stable-p1" class="stable-box">
+                        <span id="label-p1" class="stable-label p1-color">Écurie J1</span>
+                    </div>
+                    <div id="stable-p2" class="stable-box">
+                        <span id="label-p2" class="stable-label p2-color">Écurie J2</span>
+                    </div>
+                </div>
+                <div id="dai-zone">
+                    <span class="dai-title">DISQUALIFIÉS</span>
+                    <div id="dai-container"></div>
+                </div>
+            </div>
+
+            <div id="track-container">
+                <div id="infield">
+                    <div id="winners-circle">
+                        <div class="podium-header">LE PODIUM</div>
+                        <div id="podium-slots">
+                            <div class="podium-step step-2"><div id="podium-2" class="podium-content"></div><div class="rank-label silver">2</div></div>
+                            <div class="podium-step step-1"><div id="podium-1" class="podium-content"></div><div class="rank-label gold">1</div></div>
+                            <div class="podium-step step-3"><div id="podium-3" class="podium-content"></div><div class="rank-label bronze">3</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="ui-container">
+                <div id="turn-indicator" class="bg-p1">TOUR JOUEUR 1</div>
+                
+                <div id="malus-area" style="display:none;">
+                    <span id="malus-text" class="malus-tag">⚠️ Cheval Bloqué</span>
+                </div>
+
+                <div id="msg-box">À vous de jouer !</div>
+
+                <div id="action-container">
+                    <div class="die-panel">
+                        <div class="die-header">
+                            <span>DÉ 1</span>
+                            <div id="die-0" class="die">?</div>
+                        </div>
+                        <div id="list-die-0" class="action-list"></div>
+                    </div>
+
+                    <div class="die-panel">
+                        <div class="die-header">
+                            <span>DÉ 2</span>
+                            <div id="die-1" class="die">?</div>
+                        </div>
+                        <div id="list-die-1" class="action-list"></div>
+                    </div>
+                </div>
+
+                <div class="controls-footer">
+                    <button id="btn-roll" class="btn-action big-btn">LANCER LES DÉS</button>
+                    <button id="btn-rules" class="btn-secondary">RÈGLES</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="bottom-console">
+            <h3 class="console-title">JOURNAL DE COURSE</h3>
+            <div id="log-box"></div>
+        </div>
+
+    </div>
+
+    <div id="card-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="card-title">TITRE CARTE</h2>
+            <p id="card-desc">Description</p>
+            <button id="btn-close-card" class="btn-action">OK</button>
+        </div>
+    </div>
+
+    <div id="rules-modal" class="modal hidden">
+        <div class="modal-content rules-content">
+            <h2>NOTICE DU JEU</h2>
+            <div class="rules-body">
+                <h3>🏁 But du Jeu</h3>
+                <p>Placer 3 chevaux sur le podium.</p>
+                <h3>🃏 Cartes Spéciales</h3>
+                <ul class="card-list">
+                    <li><span style="color:#e74c3c">DAI :</span> Disqualification.</li>
+                    <li><span style="color:#f1c40f">Cravache :</span> +3 cases immédiat.</li>
+                    <li><span style="color:#3498db">Aspiration :</span> Colle au cheval devant.</li>
+                    <li><span style="color:#9b59b6">Enfermé :</span> Bloque le meilleur cheval adverse.</li>
+                    <li><span style="color:#2ecc71">Déferré :</span> Dé 1, 2 ou 3 devient 6.</li>
+                </ul>
+            </div>
+            <button id="btn-close-rules" class="btn-secondary">FERMER</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
