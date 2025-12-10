@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SULKY MASTERS - Édition Cartes</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="setup-screen">
+        <div class="setup-content">
+            <h1>SULKY MASTERS</h1>
+            <p>Entrez les noms des drivers :</p>
+            
+            <div class="input-group">
+                <label class="p1-color">Joueur 1 (Rouges)</label>
+                <input type="text" id="input-p1" placeholder="Ex: Thomas" maxlength="10">
+            </div>
+
+            <div class="input-group">
+                <label class="p2-color">Joueur 2 (Bleus)</label>
+                <input type="text" id="input-p2" placeholder="Ex: Sarah" maxlength="10">
+            </div>
+
+            <button id="btn-start-game" class="btn-action">ENTRER EN PISTE</button>
+        </div>
+    </div>
+
+    <div id="game-wrapper" class="hidden">
+        <h1>Sulky Masters <span class="subtitle">GRAND PRIX</span></h1>
+
+        <div id="main-layout">
+            <div id="left-column">
+                <div id="side-stables">
+                    <div id="stable-p1" class="stable-box">
+                        <span id="label-p1" class="stable-label p1-color">Écurie J1</span>
+                    </div>
+                    <div id="stable-p2" class="stable-box">
+                        <span id="label-p2" class="stable-label p2-color">Écurie J2</span>
+                    </div>
+                </div>
+                
+                <div id="dai-zone">
+                    <span class="dai-title">DISQUALIFIÉS (DAI)</span>
+                    <div id="dai-container"></div>
+                </div>
+            </div>
+
+            <div id="track-container">
+                <div id="infield">
+                    <div id="winners-circle">
+                        <div class="podium-header">LE PODIUM</div>
+                        <div id="podium-slots">
+                            <div class="podium-step step-2">
+                                <div id="podium-2" class="podium-content"></div>
+                                <div class="rank-label silver">2</div>
+                            </div>
+                            <div class="podium-step step-1">
+                                <div id="podium-1" class="podium-content"></div>
+                                <div class="rank-label gold">1</div>
+                            </div>
+                            <div class="podium-step step-3">
+                                <div id="podium-3" class="podium-content"></div>
+                                <div class="rank-label bronze">3</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="ui-container">
+                <div id="turn-indicator" class="bg-p1">TOUR JOUEUR 1</div>
+                
+                <div id="malus-area" style="display:none;">
+                    <span class="malus-tag">⚠️ ENFERMÉ (Malus Actif)</span>
+                </div>
+
+                <div class="score-board">
+                    <span class="p1-text"><span id="score-name-p1">J1</span>: <span id="score-p1">0</span></span>
+                    <span class="p2-text"><span id="score-name-p2">J2</span>: <span id="score-p2">0</span></span>
+                </div>
+
+                <div id="dice-area">
+                    <div id="die-0" class="die">?</div>
+                    <div id="die-1" class="die">?</div>
+                </div>
+
+                <div id="msg-box">À vous de jouer !</div>
+                <div id="choice-list"></div>
+                <button id="btn-roll" class="btn-action">LANCER LES DÉS</button>
+                <div id="log-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="card-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="card-title">TITRE CARTE</h2>
+            <p id="card-desc">Description de l'effet</p>
+            <button id="btn-close-card" class="btn-action">OK</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
