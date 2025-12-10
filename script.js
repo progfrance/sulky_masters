@@ -38,7 +38,6 @@ const state = {
     lockedHorseId: null, 
     pendingCardState: null,
     turn: 1,
-    // Stucture players: id, name, type (human/bot), color, points, horses
     players: {}
 };
 
@@ -52,16 +51,26 @@ const elMalusText = document.getElementById('malus-text');
 const elTurnInd = document.getElementById('turn-indicator');
 const elGameWrapper = document.getElementById('game-wrapper');
 const elSetupScreen = document.getElementById('setup-screen');
-const elPlayerCountSelect = document.getElementById('player-count-select');
-const elStablesContainer = document.getElementById('stables-container');
-const elScoreBoardContainer = document.getElementById('score-board-container');
-const elCurrentRound = document.getElementById('current-round');
+const elInputP1 = document.getElementById('input-p1');
+const elInputP2 = document.getElementById('input-p2');
 const elBtnStart = document.getElementById('btn-start-game');
+
+const elLabelP1 = document.getElementById('label-p1');
+const elLabelP2 = document.getElementById('label-p2');
+const elScoreNameP1 = document.getElementById('score-name-p1');
+const elScoreNameP2 = document.getElementById('score-name-p2');
+const elGlobalScoreP1 = document.getElementById('global-score-p1');
+const elGlobalScoreP2 = document.getElementById('global-score-p2');
+const elCurrentRound = document.getElementById('current-round');
 
 const elModal = document.getElementById('card-modal');
 const elCardTitle = document.getElementById('card-title');
 const elCardDesc = document.getElementById('card-desc');
 const elBtnCloseCard = document.getElementById('btn-close-card');
+
+const elPlayerCountSelect = document.getElementById('player-count-select');
+const elStablesContainer = document.getElementById('stables-container');
+const elScoreBoardContainer = document.getElementById('score-board-container');
 
 elBtnCloseCard.onclick = () => { 
     elModal.classList.add('hidden'); 
@@ -81,15 +90,11 @@ function startGame() {
     
     state.players = {};
     for(let i=1; i<=state.playerCount; i++) {
-        const nameInput = document.getElementById(`input-p${i}`);
-        const typeSelect = document.getElementById(`type-p${i}`);
-        const name = nameInput.value.trim() || `Joueur ${i}`;
-        const type = typeSelect ? typeSelect.value : 'human';
-
+        const nameVal = document.getElementById(`input-p${i}`).value.trim();
+        const name = nameVal || `Joueur ${i}`;
         state.players[i] = {
             id: i,
             name: name,
-            type: type, // 'human' or 'bot'
             color: `p${i}`,
             points: 0,
             horses: createTeam(name, `p${i}`)
@@ -97,6 +102,7 @@ function startGame() {
     }
 
     buildUI();
+
     elSetupScreen.classList.add('hidden');
     elGameWrapper.classList.remove('hidden');
 
@@ -110,7 +116,6 @@ function buildUI() {
     elScoreBoardContainer.innerHTML = '';
     
     for(let i=1; i<=state.playerCount; i++) {
-        // Ecuries
         const stable = document.createElement('div');
         stable.className = 'stable-box';
         stable.id = `stable-p${i}`;
@@ -118,12 +123,11 @@ function buildUI() {
         const label = document.createElement('span');
         label.className = `stable-label p${i}-color`;
         label.id = `label-p${i}`;
-        label.innerText = `${state.players[i].name}`;
+        label.innerText = `Écurie ${state.players[i].name}`;
         
         stable.appendChild(label);
         elStablesContainer.appendChild(stable);
 
-        // Scores
         const span = document.createElement('span');
         span.className = `p${i}-text`;
         span.innerHTML = `<span id="score-name-p${i}">${state.players[i].name}</span>: <span id="global-score-p${i}">0</span> pts`;
@@ -155,30 +159,8 @@ function initGame() {
     renderHorses();
     log("=== DÉBUT DE LA MANCHE 1 ===");
     updateMalusUI();
-    
-    checkTurnType(); // Vérifie si humain ou bot
-}
-
-function checkTurnType() {
-    if(state.gameOver) return;
-
-    const currentPlayer = state.players[state.turn];
-    updateTurnIndicator();
+    elRoll.style.display = 'block';
     updateDiceUI('?', '?', false);
-
-    if (currentPlayer.type === 'bot') {
-        elMsg.innerText = "L'IA réfléchit...";
-        elRoll.disabled = true;
-        elRoll.style.display = 'block';
-        elRoll.innerText = "IA...";
-        // Délai pour simuler réflexion
-        setTimeout(playBotTurn, 1000);
-    } else {
-        elMsg.innerText = "À vous de jouer !";
-        elRoll.disabled = false;
-        elRoll.style.display = 'block';
-        elRoll.innerText = "LANCER LES DÉS";
-    }
 }
 
 function initDeck() {
@@ -233,7 +215,6 @@ function renderHorses() {
         document.getElementById(`global-score-p${i}`).innerText = state.players[i].points;
     }
 
-    // Reset listes écuries
     for(let pid=1; pid<=state.playerCount; pid++) {
         const stableEl = document.getElementById(`stable-p${pid}`);
         const label = document.getElementById(`label-p${pid}`);
@@ -312,8 +293,6 @@ function renderHorses() {
     }
 }
 
-// --- LOGIQUE METIER ---
-
 function isSquareOccupied(idx) {
     let occ = false;
     for(let pid=1; pid<=state.playerCount; pid++) {
@@ -332,8 +311,6 @@ function checkOvertake(from, to) {
     return false;
 }
 
-// --- GESTION DES CARTES ---
-
 function drawCard(horse, dieValueUsed) {
     if(state.deck.length === 0) {
         log("Talon de cartes vide !");
@@ -341,92 +318,59 @@ function drawCard(horse, dieValueUsed) {
         return;
     }
     const card = state.deck.pop();
-    log(`>> CARTE : ${card.name} pour ${horse.name}`);
+    log(`>> CARTE : ${card.name}`);
     
     state.pendingCardState = { card, horse, dieValueUsed };
 
-    // Si c'est un BOT, on gère automatiquement
-    if(state.players[state.turn].type === 'bot') {
-        setTimeout(() => resolvePendingCard(true), 1000);
-    } else {
-        // Humain : Afficher Modale
-        elCardTitle.innerText = card.name;
-        elCardDesc.innerText = card.desc;
-        elModal.classList.remove('hidden');
-    }
+    elCardTitle.innerText = card.name;
+    elCardDesc.innerText = card.desc;
+    elModal.classList.remove('hidden');
 }
 
-function resolvePendingCard(isBot = false) {
+function resolvePendingCard() {
     if(!state.pendingCardState) return;
     
     const { card, horse, dieValueUsed } = state.pendingCardState;
     state.pendingCardState = null;
 
     if (card.id === 'ENFERME') {
-        if(isBot) {
-            // IA choisit la cible
-            botPickEnfermeTarget();
-        } else {
-            showEnfermeTargetSelection();
-        }
+        showEnfermeTargetSelection();
     } else {
         applyCardEffect(card, horse, dieValueUsed);
         checkEndOfMove();
     }
 }
 
-// IA pour Enfermé : Choisir le meilleur cheval adverse
-function botPickEnfermeTarget() {
-    let bestTargetId = null;
-    let maxPos = -999;
-    
-    for(let pid=1; pid<=state.playerCount; pid++) {
-        if(pid === state.turn) continue;
-        state.players[pid].horses.forEach(h => {
-            if(h.status === 'racing' && h.pos > maxPos) {
-                maxPos = h.pos;
-                bestTargetId = h.id;
-            }
-        });
-    }
-
-    if(bestTargetId) {
-        applyEnferme(bestTargetId);
-    } else {
-        log("IA : Personne à enfermer.");
-        checkEndOfMove();
-    }
-}
-
 function showEnfermeTargetSelection() {
+    const opponentId = state.turn === 1 ? 2 : 1;
+    // Si + de 2 joueurs, on cherche tous les adversaires
+    let opponentHorses = [];
+    for(let pid=1; pid<=state.playerCount; pid++) {
+        if(pid !== state.turn) {
+            opponentHorses = opponentHorses.concat(state.players[pid].horses.filter(h => h.status === 'racing'));
+        }
+    }
+
     document.getElementById('list-die-0').innerHTML = '';
     document.getElementById('list-die-1').innerHTML = '';
     elMsg.innerText = "CHOISISSEZ UNE CIBLE À ENFERMER :";
 
     const container = document.getElementById('list-die-0');
-    let targetsFound = false;
 
-    for(let pid=1; pid<=state.playerCount; pid++) {
-        if(pid === state.turn) continue;
-
-        const opponentHorses = state.players[pid].horses.filter(h => h.status === 'racing');
-        if(opponentHorses.length > 0) {
-            targetsFound = true;
-            opponentHorses.forEach(h => {
-                const btn = document.createElement('div');
-                btn.className = `choice-item target-btn`;
-                btn.style.cursor = "pointer";
-                btn.innerText = `BLOQUER ${h.name} (${state.players[pid].name})`;
-                btn.onclick = () => applyEnferme(h.id);
-                container.appendChild(btn);
-            });
-        }
-    }
-
-    if (!targetsFound) {
-        log("Aucun cheval adverse en piste.");
+    if (opponentHorses.length === 0) {
+        log("Aucun cheval adverse en piste à enfermer.");
         checkEndOfMove();
+        return;
     }
+
+    opponentHorses.forEach(h => {
+        const btn = document.createElement('div');
+        btn.className = `choice-item target-btn`;
+        btn.style.cursor = "pointer";
+        btn.innerText = `BLOQUER ${h.name}`;
+        btn.onclick = () => applyEnferme(h.id);
+        container.appendChild(btn);
+    });
 }
 
 function applyEnferme(targetId) {
@@ -531,105 +475,96 @@ function checkEndOfMove() {
     if(state.diceUsed[0] && state.diceUsed[1]) {
         setTimeout(endTurn, 1000);
     } else {
-        // Si c'est un bot, on continue son tour
-        if(state.players[state.turn].type === 'bot') {
-            setTimeout(botPlayNextMove, 1000);
-        } else {
-            // Humain : réaffiche les choix
-            calculateMoves();
+        setTimeout(calculateMoves, 300);
+    }
+}
+
+function calculatePoints() {
+    const points = [10, 5, 3];
+    state.finishedList.forEach((horseId, index) => {
+        if(index < 3) {
+            for(let pid=1; pid<=state.playerCount; pid++) {
+                if(state.players[pid].horses.some(h => h.id === horseId)) {
+                    state.players[pid].points += points[index];
+                    log(`🏆 ${state.players[pid].name} gagne ${points[index]} pts (${index+1}e place)`);
+                }
+            }
         }
-    }
-}
-
-// --- LOGIQUE IA / ROBOT ---
-
-function playBotTurn() {
-    // 1. Lancer les dés
-    state.dice = [Math.ceil(Math.random()*6), Math.ceil(Math.random()*6)];
-    state.diceUsed = [false, false];
-    state.movedHorses = []; 
-    
-    updateDiceUI(state.dice[0], state.dice[1], false);
-    log(`IA (${state.players[state.turn].name}) lance : [${state.dice[0]}] [${state.dice[1]}]`);
-    elRoll.style.display = 'none';
-
-    setTimeout(botPlayNextMove, 1000);
-}
-
-function botPlayNextMove() {
-    // On cherche les moves possibles pour chaque dé non utilisé
-    const p = state.players[state.turn];
-    let allPossibleMoves = [];
-
-    state.dice.forEach((val, dIdx) => {
-        if(state.diceUsed[dIdx]) return;
-
-        p.horses.forEach(h => {
-            if(state.movedHorses.includes(h.id) || h.status==='finished' || h.status==='dai') return;
-            
-            // Calcul logique (copie de calculateMoves)
-            let type='', target=-1;
-            let blockedByEnferme = false;
-
-            if(h.id === state.lockedHorseId && h.status === 'racing') {
-                let someoneAhead = false;
-                for(let pid=1; pid<=state.playerCount; pid++) {
-                    state.players[pid].horses.forEach(other => {
-                        if(other.status === 'racing' && other.pos > h.pos) someoneAhead = true;
-                    });
-                }
-                if(someoneAhead) blockedByEnferme = true;
-            }
-
-            if(!blockedByEnferme) {
-                if(h.status === 'stable') {
-                    let rawTarget = val;
-                    if(checkOvertake(-1, rawTarget)) rawTarget -= 1;
-                    if(rawTarget < 0) rawTarget = 0;
-                    target = rawTarget;
-                    type = 'SORTIE';
-                } else {
-                    let rawTarget = h.pos + val;
-                    if(checkOvertake(h.pos, rawTarget)) rawTarget -= 1;
-                    target = rawTarget;
-                    if(target >= TRACK_LEN) type='FINISH'; else type='MOVE';
-                }
-                
-                // On enregistre ce coup possible
-                allPossibleMoves.push({
-                    horse: h,
-                    dieIndex: dIdx,
-                    dieValue: val,
-                    targetPos: target,
-                    type: type,
-                    // Score heuristique pour l'IA
-                    score: (type==='FINISH' ? 1000 : target) // Préfère finir, sinon aller loin
-                });
-            }
-        });
     });
-
-    if(allPossibleMoves.length === 0) {
-        log("IA : Aucun mouvement possible.");
-        if(!state.diceUsed[0] && !state.diceUsed[1]) setTimeout(endTurn, 1500);
-        else setTimeout(endTurn, 1000);
-        return;
-    }
-
-    // L'IA choisit le meilleur move (le plus loin)
-    allPossibleMoves.sort((a, b) => b.score - a.score);
-    const bestMove = allPossibleMoves[0];
-
-    // Exécuter le move
-    executeMove(bestMove.horse, bestMove.targetPos, bestMove.dieIndex, bestMove.type, bestMove.dieValue);
 }
 
-// --- FIN LOGIQUE IA ---
+function handleRaceFinish() {
+    calculatePoints();
+    renderHorses(); 
 
-// Listener manuel humain
+    if(state.currentRound === 1) {
+        setTimeout(() => {
+            alert("FIN DE LA MANCHE 1 !\nLes points ont été attribués.\nPréparez-vous pour la manche décisive !");
+            startNextRound();
+        }, 500);
+    } else {
+        setTimeout(() => {
+            endMatch();
+        }, 500);
+    }
+}
+
+function startNextRound() {
+    state.currentRound = 2;
+    state.turn = 1; 
+    state.finishedList = [];
+    state.movedHorses = [];
+    state.diceUsed = [false, false];
+    state.dice = [0, 0];
+    state.lockedHorseId = null;
+    
+    for(let pid=1; pid<=state.playerCount; pid++) {
+        state.players[pid].horses.forEach(h => {
+            h.pos = -1;
+            h.status = 'stable';
+        });
+    }
+
+    initDeck();
+    initActionSquares();
+    drawBoard();
+    renderHorses();
+    
+    elLog.innerHTML = ''; 
+    log("=== DÉBUT DE LA MANCHE 2 ===");
+    elMsg.innerText = "Nouvelle manche ! À vous de jouer.";
+    
+    document.getElementById('list-die-0').innerHTML = '';
+    document.getElementById('list-die-1').innerHTML = '';
+
+    elRoll.style.display = 'block';
+    updateDiceUI('?', '?', false);
+    updateTurnIndicator();
+}
+
+function endMatch() {
+    const s1 = state.players[1].points;
+    const s2 = state.players[2].points;
+    let msg = `SCORE FINAL :\n${state.players[1].name} : ${s1} pts\n${state.players[2].name} : ${s2} pts\n\n`;
+    
+    if(s1 > s2) msg += `VICTOIRE DE ${state.players[1].name.toUpperCase()} ! 🏆`;
+    else if(s2 > s1) msg += `VICTOIRE DE ${state.players[2].name.toUpperCase()} ! 🏆`;
+    else msg += "ÉGALITÉ PARFAITE !";
+
+    state.gameOver = true;
+    elMsg.innerText = "CHAMPIONNAT TERMINÉ";
+    elRoll.style.display = 'none';
+    alert(msg);
+}
+
 elRoll.onclick = () => {
     if(state.gameOver) return;
     
+    if(!state.players[state.turn]) {
+        console.error("Bug: state.turn invalide. Reset to 1.");
+        state.turn = 1;
+    }
+
     state.dice = [Math.ceil(Math.random()*6), Math.ceil(Math.random()*6)];
     state.diceUsed = [false, false];
     state.movedHorses = []; 
@@ -764,102 +699,6 @@ function executeMove(h, target, dIdx, type, dieValue) {
     }
 }
 
-function calculatePoints() {
-    const points = [10, 5, 3];
-    state.finishedList.forEach((horseId, index) => {
-        if(index < 3) {
-            for(let pid=1; pid<=state.playerCount; pid++) {
-                if(state.players[pid].horses.some(h => h.id === horseId)) {
-                    state.players[pid].points += points[index];
-                    log(`🏆 ${state.players[pid].name} gagne ${points[index]} pts (${index+1}e place)`);
-                }
-            }
-        }
-    });
-}
-
-function handleRaceFinish() {
-    calculatePoints();
-    renderHorses(); 
-
-    if(state.currentRound === 1) {
-        setTimeout(() => {
-            alert("FIN DE LA MANCHE 1 !\nLes points ont été attribués.\nPréparez-vous pour la manche décisive !");
-            startNextRound();
-        }, 500);
-    } else {
-        setTimeout(() => {
-            endMatch();
-        }, 500);
-    }
-}
-
-function startNextRound() {
-    state.currentRound = 2;
-    state.turn = 1; 
-    state.finishedList = [];
-    state.movedHorses = [];
-    state.diceUsed = [false, false];
-    state.dice = [0, 0];
-    state.lockedHorseId = null;
-    
-    for(let pid=1; pid<=state.playerCount; pid++) {
-        state.players[pid].horses.forEach(h => {
-            h.pos = -1;
-            h.status = 'stable';
-        });
-    }
-
-    initDeck();
-    initActionSquares();
-    drawBoard();
-    renderHorses();
-    
-    elLog.innerHTML = ''; 
-    log("=== DÉBUT DE LA MANCHE 2 ===");
-    elMsg.innerText = "Nouvelle manche ! À vous de jouer.";
-    
-    document.getElementById('list-die-0').innerHTML = '';
-    document.getElementById('list-die-1').innerHTML = '';
-
-    elRoll.style.display = 'block';
-    updateDiceUI('?', '?', false);
-    updateTurnIndicator();
-    checkTurnType();
-}
-
-function endMatch() {
-    let winner = null;
-    let maxPts = -1;
-    let msg = "SCORE FINAL :\n";
-    
-    for(let pid=1; pid<=state.playerCount; pid++) {
-        const pts = state.players[pid].points;
-        msg += `${state.players[pid].name} : ${pts} pts\n`;
-        if(pts > maxPts) {
-            maxPts = pts;
-            winner = state.players[pid].name;
-        } else if(pts === maxPts) {
-            winner = "ÉGALITÉ";
-        }
-    }
-    
-    msg += `\nVICTOIRE : ${winner} !`;
-
-    state.gameOver = true;
-    elMsg.innerText = "CHAMPIONNAT TERMINÉ";
-    
-    // Vider l'interface
-    elRoll.style.display = 'none';
-    elTurnInd.innerHTML = "FIN DE PARTIE";
-    elTurnInd.className = '';
-    updateDiceUI('', '', false);
-    document.getElementById('list-die-0').innerHTML = '';
-    document.getElementById('list-die-1').innerHTML = '';
-    
-    alert(msg);
-}
-
 function endTurn() {
     if(state.gameOver) return;
     
@@ -879,14 +718,18 @@ function endTurn() {
     if(state.turn > state.playerCount) state.turn = 1;
 
     updateMalusUI();
-    checkTurnType(); // Vérif si humain ou robot
+    updateTurnIndicator();
+    
+    updateDiceUI('?', '?', false);
+    elMsg.innerText = "À vous !";
+    log(`--- Tour ${state.players[state.turn].name} ---`);
 }
 
 function updateTurnIndicator() {
     if(!state.players[state.turn]) return;
     const nextName = state.players[state.turn].name;
     elTurnInd.innerText = `TOUR DE ${nextName.toUpperCase()}`;
-    elTurnInd.className = state.players[state.turn].color; 
+    elTurnInd.className = `bg-${state.players[state.turn].color}`; // Fix for CSS
 }
 
 function updateDiceUI(d1, d2, onlyStyle) {
