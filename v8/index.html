@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SULKY MASTERS - Vs CPU</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="setup-screen">
+        <div class="setup-content">
+            <h1>SULKY MASTERS</h1>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="player-count-select" style="font-weight:bold; margin-right:10px;">Joueurs :</label>
+                <select id="player-count-select" style="padding: 5px; font-size: 16px; border-radius: 5px;">
+                    <option value="2">2 Joueurs</option>
+                    <option value="3">3 Joueurs</option>
+                    <option value="4">4 Joueurs</option>
+                </select>
+            </div>
+
+            <div class="players-inputs">
+                <div class="input-row" id="group-p1">
+                    <label class="p1-color">J1 (Rouge)</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="input-p1" value="Thomas" maxlength="10">
+                        <select id="type-p1">
+                            <option value="human">Humain</option>
+                            <option value="bot">Robot</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-row" id="group-p2">
+                    <label class="p2-color">J2 (Bleu)</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="input-p2" value="Sarah" maxlength="10">
+                        <select id="type-p2">
+                            <option value="human">Humain</option>
+                            <option value="bot">Robot</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-row hidden" id="group-p3">
+                    <label class="p3-color">J3 (Jaune)</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="input-p3" value="Bot 3" maxlength="10">
+                        <select id="type-p3">
+                            <option value="bot">Robot</option>
+                            <option value="human">Humain</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-row hidden" id="group-p4">
+                    <label class="p4-color">J4 (Vert)</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="input-p4" value="Bot 4" maxlength="10">
+                        <select id="type-p4">
+                            <option value="bot">Robot</option>
+                            <option value="human">Humain</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button id="btn-start-game" class="btn-action">ENTRER EN PISTE</button>
+        </div>
+    </div>
+
+    <div id="game-wrapper" class="hidden">
+        
+        <div id="top-bar">
+            <h1>Sulky Masters <span class="subtitle">GRAND PRIX</span></h1>
+            <div id="round-display">MANCHE <span id="current-round">1</span> / 2</div>
+            <div class="score-display" id="score-board-container"></div>
+        </div>
+
+        <div id="main-layout">
+            <div id="left-column">
+                <div id="stables-container"></div>
+                <div id="dai-zone">
+                    <span class="dai-title">DISQUALIFIÉS</span>
+                    <div id="dai-container"></div>
+                </div>
+            </div>
+
+            <div id="track-container">
+                <div id="infield">
+                    <div id="winners-circle">
+                        <div class="podium-header">LE PODIUM</div>
+                        <div id="podium-slots">
+                            <div class="podium-step step-2"><div id="podium-2" class="podium-content"></div><div class="rank-label silver">2</div></div>
+                            <div class="podium-step step-1"><div id="podium-1" class="podium-content"></div><div class="rank-label gold">1</div></div>
+                            <div class="podium-step step-3"><div id="podium-3" class="podium-content"></div><div class="rank-label bronze">3</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="ui-container">
+                <div id="turn-indicator" class="bg-p1">TOUR JOUEUR 1</div>
+                
+                <div id="malus-area" style="display:none;">
+                    <span id="malus-text" class="malus-tag"></span>
+                </div>
+
+                <div id="msg-box">À vous de jouer !</div>
+
+                <div id="action-container">
+                    <div class="die-panel">
+                        <div class="die-header"><span>DÉ 1</span><div id="die-0" class="die">?</div></div>
+                        <div id="list-die-0" class="action-list"></div>
+                    </div>
+
+                    <div class="die-panel">
+                        <div class="die-header"><span>DÉ 2</span><div id="die-1" class="die">?</div></div>
+                        <div id="list-die-1" class="action-list"></div>
+                    </div>
+                </div>
+
+                <div class="controls-footer">
+                    <button id="btn-roll" class="btn-action big-btn">LANCER LES DÉS</button>
+                    <a href="rules.html" target="_blank" class="btn-secondary" style="display:block; text-align:center; padding:10px 0; text-decoration:none;">RÈGLES & CARTES</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="bottom-console">
+            <h3 class="console-title">JOURNAL DE COURSE</h3>
+            <div id="log-box"></div>
+        </div>
+    </div>
+
+    <div id="card-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="card-title">TITRE</h2>
+            <p id="card-desc">Desc</p>
+            <button id="btn-close-card" class="btn-action">OK</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
