@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Règles - SULKY MASTERS</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Style spécifique pour la page de règles seule */
+        body.rules-body-page {
+            justify-content: flex-start;
+            padding-top: 40px;
+            height: auto;
+            overflow-y: auto;
+        }
+        .rules-container {
+            background: #fff;
+            color: #333;
+            padding: 40px;
+            border-radius: 8px;
+            width: 700px;
+            max-width: 90%;
+            border: 4px solid var(--action-purple);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: left;
+            margin-bottom: 40px;
+        }
+        .rules-container h2 { text-align: center; color: var(--action-purple); margin-top: 0; }
+        .rules-container h3 { border-bottom: 2px solid #34495e; padding-bottom: 5px; margin-top: 20px; color: #2c3e50; }
+        .rules-container li { margin-bottom: 8px; }
+        .close-btn-container { text-align: center; margin-top: 30px; }
+    </style>
+</head>
+<body class="rules-body-page">
+
+    <div class="rules-container">
+        <h2>RÈGLES DU GRAND PRIX</h2>
+        
+        <div>
+            <h3>🏆 Championnat (2 Manches)</h3>
+            <p>Le vainqueur est celui qui cumule le plus de points à la fin des 2 manches.</p>
+            <ul>
+                <li>🥇 <strong>1ère place :</strong> 10 points</li>
+                <li>🥈 <strong>2ème place :</strong> 5 points</li>
+                <li>🥉 <strong>3ème place :</strong> 3 points</li>
+            </ul>
+
+            <h3>🃏 Les Cartes (Talon de 40)</h3>
+            <ul class="card-list">
+                <li><span style="color:#f1c40f"><strong>Coup de Cravache (8 cartes) :</strong></span> Ajoutez +3 à votre dé immédiatement (le cheval avance de 3 cases supplémentaires).</li>
+                <li><span style="color:#e74c3c"><strong>Allure Irrégulière / DAI (4 cartes) :</strong></span> Disqualification immédiate du cheval. Il est retiré de la course.</li>
+                <li><span style="color:#3498db"><strong>Aspiration (12 cartes) :</strong></span> Avancez votre cheval pour qu'il colle exactement derrière le cheval le plus proche devant lui.</li>
+                <li><span style="color:#9b59b6"><strong>Enfermé (8 cartes) :</strong></span> Choisissez le cheval adverse le plus en tête. Il ne pourra pas bouger au prochain tour s'il a un autre cheval devant lui (peu importe la distance).</li>
+                <li><span style="color:#2ecc71"><strong>Déferré des 4 (8 cartes) :</strong></span> Si le dé joué était un 1, 2 ou 3, il se transforme en 6. Avancez de la différence.</li>
+            </ul>
+
+            <h3>⚠️ Règles de Piste</h3>
+            <ul>
+                <li><strong>Extérieur :</strong> Si vous doublez ou atterrissez sur une case occupée, reculez d'une case (Malus -1).</li>
+                <li><strong>Empilement :</strong> 2 chevaux peuvent être sur la même case.</li>
+            </ul>
+        </div>
+
+        <div class="close-btn-container">
+            <button onclick="window.close()" class="btn-secondary" style="width: 200px;">FERMER LA PAGE</button>
+        </div>
+    </div>
+
+</body>
+</html>
