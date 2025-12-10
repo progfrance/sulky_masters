@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SULKY MASTERS - Grand Prix</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Sulky Masters <span class="subtitle">ÉDITION GRAND PRIX</span></h1>
+
+    <div id="main-layout">
+        <div id="side-stables">
+            <div id="stable-p1" class="stable-box"><span class="stable-label p1-color">Écurie J1</span></div>
+            <div id="stable-p2" class="stable-box"><span class="stable-label p2-color">Écurie J2</span></div>
+        </div>
+
+        <div id="track-container">
+            <div id="infield">
+                <div id="winners-circle">
+                    <div class="podium-header">LE PODIUM</div>
+                    <div id="podium-slots">
+                        <div class="podium-step step-2">
+                            <div id="podium-2" class="podium-content"></div>
+                            <div class="rank-label silver">2</div>
+                        </div>
+                        <div class="podium-step step-1">
+                            <div id="podium-1" class="podium-content"></div>
+                            <div class="rank-label gold">1</div>
+                        </div>
+                        <div class="podium-step step-3">
+                            <div id="podium-3" class="podium-content"></div>
+                            <div class="rank-label bronze">3</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+        <div id="ui-container">
+            <div id="turn-indicator" class="bg-p1">TOUR JOUEUR 1</div>
+            
+            <div class="score-board">
+                <span class="p1-text">J1 Arrivés: <span id="score-p1">0</span></span>
+                <span class="p2-text">J2 Arrivés: <span id="score-p2">0</span></span>
+            </div>
+
+            <div id="dice-area">
+                <div id="die-0" class="die">?</div>
+                <div id="die-1" class="die">?</div>
+            </div>
+
+            <div id="msg-box">À vous de jouer !</div>
+            <div id="choice-list"></div>
+            <button id="btn-roll" class="btn-action">LANCER LES DÉS</button>
+            <div id="log-box"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
