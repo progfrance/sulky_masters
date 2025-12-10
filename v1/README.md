@@ -52,6 +52,3 @@ Les cartes ajoutent de la technique, de la triche et de l'arbitrage. [cite_start
 | **Enfermé !** | Piège | Un cheval adverse ne peut pas bouger s'il a un autre cheval devant lui. | Bloqué dans le peloton. |
 | **Déferré des 4** | Boost | Les 1, 2 ou 3 comptent comme des **6** ce tour-ci. | Le cheval vole sans ses fers. |
 | **Grand Extérieur** | Tactique | Ignorez la règle de blocage ce tour-ci. | Attaque par la 3ème épaisseur. |
-
----
-*Basé sur le Game Design Document de "Jeux David" - Sulky Masters.*
