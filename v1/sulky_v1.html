@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SULKY MASTERS - Grand Prix</title>
+    <style>
+        :root {
+            --p1-main: #c0392b; --p1-light: #e74c3c;
+            --p2-main: #2980b9; --p2-light: #3498db;
+            --board-green: #27ae60; --track-grey: #ecf0f1;
+            --bg-color: #2c3e50;
+            --ui-bg: #34495e;
+            --gold: #f1c40f;
+            --silver: #bdc3c7;
+            --bronze: #cd7f32;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: white;
+            display: flex; flex-direction: column; align-items: center;
+            margin: 0; padding: 10px;
+            min-height: 100vh;
+        }
+
+        h1 { margin: 0 0 15px 0; font-style: italic; text-transform: uppercase; font-size: 22px; letter-spacing: 2px; text-shadow: 2px 2px 0px #000;}
+
+        /* --- LAYOUT 3 COLONNES --- */
+        #main-layout {
+            display: flex; gap: 30px; justify-content: center; align-items: flex-start; flex-wrap: wrap;
+        }
+
+        /* --- GAUCHE : ÉCURIES --- */
+        #side-stables { display: flex; flex-direction: column; gap: 20px; margin-top: 50px; }
+        .stable-box {
+            width: 100px; height: 140px;
+            border: 3px dashed; border-radius: 12px;
+            padding: 10px; position: relative;
+            background: rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center;
+        }
+        #stable-p1 { border-color: var(--p1-main); }
+        #stable-p2 { border-color: var(--p2-main); }
+        .stable-label { position: absolute; top: -12px; background: var(--bg-color); padding: 0 8px; font-size: 11px; font-weight: bold; text-transform: uppercase;}
+
+        /* --- CENTRE : PISTE OVALE --- */
+        #track-container {
+            position: relative;
+            width: 600px; height: 500px;
+            /* background: rgba(255,255,255,0.05); debug */
+        }
+
+        /* PELOUSE CENTRALE (INFIELD) + PODIUM */
+        #infield {
+            position: absolute;
+            top: 100px; left: 100px;
+            width: 400px; height: 300px;
+            background-color: var(--board-green);
+            border-radius: 150px / 100px; /* Ovale */
+            border: 5px solid #1e272e;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.3);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow: hidden;
+        }
+
+        /* LE PODIUM DANS LA PELOUSE */
+        #winners-circle {
+            text-align: center; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .podium-header {
+            font-size: 24px; font-weight: bold; color: rgba(255,255,255,0.2);
+            text-transform: uppercase; margin-bottom: 20px; font-style: italic;
+        }
+        #podium-slots {
+            display: flex; gap: 15px; align-items: flex-end; justify-content: center;
+            width: 80%;
+        }
+        .podium-step {
+            width: 60px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+            background: rgba(0,0,0,0.2); border-radius: 8px 8px 0 0;
+            padding-bottom: 5px; border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+        /* Hauteurs des marches */
+        .step-1 { height: 100px; background: linear-gradient(to top, rgba(241, 196, 15, 0.3), transparent); border-color: var(--gold); }
+        .step-2 { height: 75px; background: linear-gradient(to top, rgba(189, 195, 199, 0.3), transparent); border-color: var(--silver); }
+        .step-3 { height: 55px; background: linear-gradient(to top, rgba(205, 127, 50, 0.3), transparent); border-color: var(--bronze); }
+        .rank-label { font-size: 14px; font-weight: bold; margin-top: 5px; color: white; text-shadow: 1px 1px 2px black;}
+
+        /* LES CASES DE LA PISTE */
+        .cell {
+            position: absolute;
+            background-color: var(--track-grey);
+            border: 2px solid #95a5a6;
+            color: #7f8c8d; font-size: 10px; font-weight: bold;
+            display: flex; justify-content: center; align-items: center;
+            width: 38px; height: 38px; box-sizing: border-box;
+            border-radius: 50%;
+            box-shadow: 1px 1px 4px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        /* Ligne d'arrivée / Départ style Damier */
+        .cell.finish-line {
+            background-color: #ecf0f1;
+            background-image:
+                linear-gradient(45deg, #000 25%, transparent 25%),
+                linear-gradient(-45deg, #000 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #000 75%),
+                linear-gradient(-45deg, transparent 75%, #000 75%);
+            background-size: 10px 10px;
+            background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
+            border: 2px solid #f1c40f;
+            color: white; text-shadow: 0 0 2px black;
+            z-index: 2; transform: scale(1.1);
+        }
+        .cell[data-idx="5"], .cell[data-idx="6"] { background-color: #dff9fb; border-color: #3498db; }
+
+        /* CHEVAUX */
+        .horse {
+            width: 34px; height: 22px;
+            border-radius: 5px; position: absolute; z-index: 10;
+            display: flex; justify-content: center; align-items: center;
+            font-weight: bold; font-size: 9px; color: white;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.9);
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); /* Effet ressort */
+        }
+        .horse.p1 { background: linear-gradient(135deg, var(--p1-light), var(--p1-main)); }
+        .horse.p2 { background: linear-gradient(135deg, var(--p2-light), var(--p2-main)); }
+        
+        /* Chevaux sur le podium */
+        .horse.winner { 
+            position: relative; top: auto; left: auto; 
+            margin-bottom: 5px; transform: scale(1.1); box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+        }
+        .horse.static { position: relative; top: auto; left: auto; }
+
+        /* --- DROITE : UI --- */
+        #ui-container {
+            width: 300px; background-color: var(--ui-bg);
+            padding: 20px; border-radius: 12px;
+            display: flex; flex-direction: column; gap: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            border: 1px solid #486481;
+        }
+        #turn-indicator { 
+            font-size: 18px; font-weight: bold; padding: 12px; text-align: center; color: white; 
+            border-radius: 6px; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .bg-p1 { background: var(--p1-main); border-left: 5px solid white; }
+        .bg-p2 { background: var(--p2-main); border-right: 5px solid white; }
+
+        #dice-area { 
+            display: flex; justify-content: center; gap: 15px; padding: 10px; 
+            background: rgba(0,0,0,0.2); border-radius: 8px; 
+        }
+        .die {
+            width: 50px; height: 50px; background: #ecf0f1; color: #2c3e50; 
+            font-size: 26px; font-weight: bold; display: flex; justify-content: center; align-items: center; 
+            border-radius: 8px; box-shadow: 0 4px 0 #bdc3c7;
+        }
+        .die.active { background: #f1c40f; color: #2c3e50; transform: translateY(-2px); box-shadow: 0 6px 0 #d35400; border: 2px solid white;}
+        .die.used { opacity: 0.3; transform: scale(0.9); box-shadow: none; filter: grayscale(100%); }
+
+        button.btn-action {
+            background-color: #f1c40f; border: none; padding: 12px; font-size: 16px; font-weight: bold; 
+            cursor: pointer; border-radius: 6px; color: #2c3e50; width: 100%; transition: transform 0.1s;
+        }
+        button.btn-action:hover { background-color: #f39c12; transform: translateY(-1px); }
+        
+        #choice-list { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+        .choice-item {
+            padding: 10px; border: none; border-radius: 5px; cursor: pointer; text-align: left; color: white;
+            font-size: 12px; display: flex; align-items: center; gap: 10px; transition: background 0.2s;
+        }
+        .choice-item:hover { filter: brightness(1.1); padding-left: 15px; }
+        .choice-item.p1 { background: var(--p1-main); }
+        .choice-item.p2 { background: var(--p2-main); }
+        .die-icon { 
+            background: white; color: black; width: 20px; height: 20px; border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; font-weight: bold; 
+        }
+
+        #log-box { 
+            height: 100px; overflow-y: auto; background: #22303e; border: 1px solid #486481; 
+            font-size: 11px; padding: 8px; color: #bdc3c7; border-radius: 4px; font-family: monospace;
+        }
+        .log-line { border-bottom: 1px solid rgba(255,255,255,0.1); padding: 2px 0; }
+    </style>
+</head>
+<body>
+
+    <h1>Sulky Masters <span style="font-size:12px; color:#95a5a6; vertical-align:middle;">PROTOTYPE</span></h1>
+
+    <div id="main-layout">
+        
+        <div id="side-stables">
+            <div id="stable-p1" class="stable-box">
+                <span class="stable-label" style="color:var(--p1-main)">Écurie J1</span>
+            </div>
+            <div id="stable-p2" class="stable-box">
+                <span class="stable-label" style="color:var(--p2-main)">Écurie J2</span>
+            </div>
+        </div>
+
+        <div id="track-container">
+            <div id="infield">
+                <div id="winners-circle">
+                    <div class="podium-header">ARRIVÉE</div>
+                    <div id="podium-slots">
+                        <div class="podium-step step-2">
+                            <div id="podium-2" style="min-height:24px;"></div>
+                            <div class="rank-label" style="color:var(--silver)">2</div>
+                        </div>
+                        <div class="podium-step step-1">
+                            <div id="podium-1" style="min-height:24px;"></div>
+                            <div class="rank-label" style="color:var(--gold)">1</div>
+                        </div>
+                        <div class="podium-step step-3">
+                            <div id="podium-3" style="min-height:24px;"></div>
+                            <div class="rank-label" style="color:var(--bronze)">3</div>
+                        </div>
+                    </div>
+                    <div id="podium-others" style="margin-top:10px; display:flex; gap:5px; flex-wrap:wrap; justify-content:center;"></div>
+                </div>
+            </div>
+            </div>
+
+        <div id="ui-container">
+            <div id="turn-indicator" class="bg-p1">TOUR JOUEUR 1</div>
+            
+            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:bold;">
+                <span style="color:var(--p1-light)">J1 Classés: <span id="score-p1">0</span></span>
+                <span style="color:var(--p2-light)">J2 Classés: <span id="score-p2">0</span></span>
+            </div>
+
+            <div id="dice-area">
+                <div id="die-0" class="die">?</div>
+                <div id="die-1" class="die">?</div>
+            </div>
+
+            <div id="msg-box" style="text-align:center; color:#f1c40f; font-size:13px; min-height:18px;">À vous de jouer !</div>
+            
+            <div id="choice-list"></div>
+            
+            <button id="btn-roll" class="btn-action">LANCER LES DÉS</button>
+            
+            <div id="log-box"></div>
+        </div>
+    </div>
+
+<script>
+// --- GEOMETRIE PISTE OVALE ---
+const TRACK_LEN = 48;
+const COORDS = [];
+const CX = 300, CY = 250; // Centre du conteneur
+const RX = 245, RY = 195; // Rayons de l'ovale
+
+function initCoords() {
+    // On génère 48 points sur l'ellipse
+    // Départ en bas (PI/2), sens horaire (on soustrait l'angle)
+    for(let i=0; i<TRACK_LEN; i++) {
+        const angle = (Math.PI / 2) - (i * (2 * Math.PI / TRACK_LEN));
+        COORDS.push({
+            x: CX + RX * Math.cos(angle) - 19, // -19 pour centrer (38px/2)
+            y: CY + RY * Math.sin(angle) - 19
+        });
+    }
+}
+initCoords();
+
+// --- ETAT DU JEU ---
+const state = {
+    turn: 1, 
+    finishedList: [], // Liste ordonnée des chevaux arrivés
+    dice: [0,0], diceUsed: [false,false], movedHorses: [],
+    players: {
+        1: { color: 'p1', horses: createTeam('J1', 'p1') },
+        2: { color: 'p2', horses: createTeam('J2', 'p2') }
+    }
+};
+
+function createTeam(name, col) {
+    return [1,2,3].map(i => ({ id: `${col}h${i}`, name: `${name}-${i}`, pos: -1, status: 'stable' }));
+}
+
+// --- DOM ---
+const elTrack = document.getElementById('track-container');
+const elChoices = document.getElementById('choice-list');
+const elLog = document.getElementById('log-box');
+const elRoll = document.getElementById('btn-roll');
+
+// --- RENDERING ---
+function initGame() {
+    drawBoard();
+    renderHorses();
+    log("Bienvenue au Sulky Masters !");
+}
+
+function drawBoard() {
+    // Création des cases
+    COORDS.forEach((p, i) => {
+        const d = document.createElement('div');
+        d.className = 'cell';
+        d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
+        d.setAttribute('data-idx', i);
+        
+        if(i === 0) {
+            d.classList.add('finish-line');
+            d.innerText = '🏁'; // Drapeau arrivée
+        } else {
+            d.innerText = i;
+        }
+        elTrack.appendChild(d);
+    });
+}
+
+function renderHorses() {
+    // Nettoyage chevaux
+    document.querySelectorAll('.horse').forEach(h => h.remove());
+
+    [1,2].forEach(pid => {
+        state.players[pid].horses.forEach(h => {
+            const el = document.createElement('div');
+            el.className = `horse ${state.players[pid].color}`;
+            el.innerText = h.name;
+
+            if(h.status === 'stable') {
+                el.classList.add('static');
+                document.getElementById(`stable-p${pid}`).appendChild(el);
+            } 
+            else if(h.status === 'finished') {
+                // Gestion Podium
+                el.classList.add('winner');
+                // Trouver le rang dans la liste globale
+                const rankIndex = state.finishedList.indexOf(h.id); // 0 = 1er
+                const rank = rankIndex + 1;
+                
+                // Distribuer dans les bonnes div podium
+                let targetDiv;
+                if(rank === 1) targetDiv = document.getElementById('podium-1');
+                else if(rank === 2) targetDiv = document.getElementById('podium-2');
+                else if(rank === 3) targetDiv = document.getElementById('podium-3');
+                else targetDiv = document.getElementById('podium-others');
+
+                if(targetDiv) targetDiv.appendChild(el);
+            } 
+            else {
+                // Sur la piste
+                const c = COORDS[h.pos];
+                // Petit offset si plusieurs chevaux (sommaire)
+                const offX = pid===1 ? -3 : 3;
+                const offY = pid===1 ? -3 : 3;
+                el.style.left = (c.x + offX) + 'px'; 
+                el.style.top = (c.y + offY) + 'px';
+                elTrack.appendChild(el);
+            }
+        });
+    });
+    
+    // Score update
+    const p1Score = state.players[1].horses.filter(h=>h.status==='finished').length;
+    const p2Score = state.players[2].horses.filter(h=>h.status==='finished').length;
+    document.getElementById('score-p1').innerText = p1Score;
+    document.getElementById('score-p2').innerText = p2Score;
+}
+
+// --- LOGIC ---
+function isOccupied(idx) {
+    let occ = false;
+    [1,2].forEach(pid => {
+        state.players[pid].horses.forEach(h => {
+            if(h.status === 'racing' && h.pos === idx) occ = true;
+        });
+    });
+    return occ;
+}
+
+function isBlocked(from, to) {
+    for(let i = from + 1; i < to; i++) {
+        if(i >= TRACK_LEN) break;
+        if(isOccupied(i)) return true;
+    }
+    return false;
+}
+
+function checkGameOver() {
+    if(state.finishedList.length >= 6) { // Tous arrivés (optionnel) ou condition de victoire
+        setTimeout(() => alert("Course Terminée !"), 500);
+    }
+}
+
+// --- TURNS ---
+elRoll.onclick = () => {
+    state.dice = [Math.ceil(Math.random()*6), Math.ceil(Math.random()*6)];
+    state.diceUsed = [false, false];
+    state.movedHorses = [];
+    
+    updateDiceUI(state.dice[0], state.dice[1], false);
+    log(`J${state.turn} lance [${state.dice[0]}] [${state.dice[1]}]`);
+    elRoll.style.display = 'none';
+    
+    calculateMoves();
+};
+
+function calculateMoves() {
+    elChoices.innerHTML = '';
+    const p = state.players[state.turn];
+    let moves = 0;
+    let blocked = false;
+
+    state.dice.forEach((val, dIdx) => {
+        if(state.diceUsed[dIdx]) return;
+        document.getElementById(`die-${dIdx}`).classList.add('active');
+
+        p.horses.forEach(h => {
+            if(state.movedHorses.includes(h.id) || h.status==='finished') return;
+            
+            let valid=false, type='', target=-1;
+
+            if(h.status === 'stable') {
+                if(val===5 || val===6) {
+                    target=val;
+                    if(isOccupied(target)) blocked=true;
+                    else if(!isBlocked(-1, target)) { valid=true; type='SORTIE'; }
+                }
+            } else { // racing
+                target = h.pos + val;
+                if(target >= TRACK_LEN) { valid=true; type='FINISH'; }
+                else {
+                    if(isOccupied(target)) blocked=true;
+                    else if(!isBlocked(h.pos, target)) { valid=true; type='MOVE'; }
+                }
+            }
+
+            if(valid) {
+                moves++;
+                addChoiceBtn(h, val, dIdx, type, target, p.color);
+            }
+        });
+    });
+
+    if(moves===0) {
+        document.getElementById('msg-box').innerText = blocked ? "Bloqué !" : "Aucun mouvement.";
+        // Auto skip logic
+        if(!state.diceUsed[0] && !state.diceUsed[1]) setTimeout(endTurn, 1500);
+        else setTimeout(endTurn, 1000);
+    } else {
+        document.getElementById('msg-box').innerText = "Choisissez une action :";
+    }
+}
+
+function addChoiceBtn(h, val, dIdx, type, target, color) {
+    const btn = document.createElement('div');
+    btn.className = `choice-item ${color}`;
+    let txt = type==='SORTIE' ? `Sortie case ${target}` : (type==='FINISH' ? '🏁 ARRIVÉE !' : `Avance case ${target}`);
+    btn.innerHTML = `<span class="die-icon">${val}</span> <b>${h.name}</b> : ${txt}`;
+    btn.onclick = () => executeMove(h, val, dIdx);
+    elChoices.appendChild(btn);
+}
+
+function executeMove(h, val, dIdx) {
+    if(h.status==='stable') {
+        h.status='racing'; h.pos=val;
+        log(`${h.name} sort case ${val}`);
+    } else {
+        h.pos += val;
+        if(h.pos >= TRACK_LEN) {
+            h.status='finished'; h.pos=999;
+            state.finishedList.push(h.id); // Ajout à la liste des arrivés
+            log(`🏁 ${h.name} termine !`);
+        } else {
+            log(`${h.name} case ${h.pos}`);
+        }
+    }
+
+    state.diceUsed[dIdx] = true;
+    state.movedHorses.push(h.id);
+    updateDiceUI(null, null, true);
+    renderHorses();
+
+    if(state.diceUsed[0] && state.diceUsed[1]) setTimeout(endTurn, 1000);
+    else setTimeout(calculateMoves, 300);
+}
+
+function endTurn() {
+    elChoices.innerHTML = '';
+    elRoll.style.display = 'block';
+    state.turn = state.turn===1 ? 2 : 1;
+    
+    const ui = document.getElementById('turn-indicator');
+    ui.innerText = `TOUR JOUEUR ${state.turn}`;
+    ui.className = state.turn===1 ? 'bg-p1' : 'bg-p2';
+    
+    updateDiceUI('?', '?', false);
+    document.getElementById('msg-box').innerText = "À vous !";
+    log(`--- Tour J${state.turn} ---`);
+}
+
+function updateDiceUI(d1, d2, onlyStyle) {
+    if(!onlyStyle) {
+        document.getElementById('die-0').innerText = d1;
+        document.getElementById('die-1').innerText = d2;
+    }
+    [0,1].forEach(i => {
+        const el = document.getElementById(`die-${i}`);
+        el.className = `die ${state.diceUsed[i] ? 'used' : ''}`;
+    });
+}
+
+function log(t) {
+    const d = document.createElement('div');
+    d.className = 'log-line'; d.innerText = t;
+    elLog.prepend(d);
+}
+
+initGame();
+</script>
+</body>
+</html>
