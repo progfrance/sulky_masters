@@ -1,21 +1,34 @@
-// --- CONFIG PISTE ---
+// --- CONFIGURATION DE LA PISTE (SPIRALE) ---
 const TRACK_LEN = 48;
 const COORDS = [];
-const CX = 350, CY = 300; 
-const RX = 310, RY = 250; 
 
 function initCoords() {
+    // Centre
+    const CX = 350, CY = 300; 
+    // Rayons de DÉPART (plus petits, à l'intérieur)
+    const RX_START = 280, RY_START = 220;
+    // Rayons d'ARRIVÉE (plus grands, créant le décalage vers l'extérieur)
+    const RX_END = 330, RY_END = 270;
+
+    const startAngle = Math.PI / 2 + 0.4; 
+    const totalAngleSpan = 2.2 * Math.PI;
+
     for(let i=0; i<TRACK_LEN; i++) {
-        const angle = (Math.PI / 2) - (i * (2 * Math.PI / TRACK_LEN));
+        const t = i / (TRACK_LEN - 1);
+        // Interpolation linéaire du rayon
+        const currentRX = RX_START + t * (RX_END - RX_START);
+        const currentRY = RY_START + t * (RY_END - RY_START);
+        const angle = startAngle - (t * totalAngleSpan);
+
         COORDS.push({
-            x: CX + RX * Math.cos(angle) - 25, 
-            y: CY + RY * Math.sin(angle) - 25
+            x: CX + currentRX * Math.cos(angle) - 25, 
+            y: CY + currentRY * Math.sin(angle) - 25
         });
     }
 }
 initCoords();
 
-// --- CONFIG CARTES ---
+// --- CONFIGURATION DES CARTES ---
 const CARD_DEFINITIONS = [
     { id: 'CRAVACHE', name: "Coup de Cravache", count: 8, desc: "Le cheval avance immédiatement de 3 cases supplémentaires !" },
     { id: 'DAI', name: "Allure Irrégulière (DAI)", count: 4, desc: "Disqualification immédiate ! Le cheval quitte la course." },
@@ -51,27 +64,19 @@ const elMalusText = document.getElementById('malus-text');
 const elTurnInd = document.getElementById('turn-indicator');
 const elGameWrapper = document.getElementById('game-wrapper');
 const elSetupScreen = document.getElementById('setup-screen');
-const elInputP1 = document.getElementById('input-p1');
-const elInputP2 = document.getElementById('input-p2');
 const elBtnStart = document.getElementById('btn-start-game');
-
-const elLabelP1 = document.getElementById('label-p1');
-const elLabelP2 = document.getElementById('label-p2');
-const elScoreNameP1 = document.getElementById('score-name-p1');
-const elScoreNameP2 = document.getElementById('score-name-p2');
-const elGlobalScoreP1 = document.getElementById('global-score-p1');
-const elGlobalScoreP2 = document.getElementById('global-score-p2');
+const elPlayerCountSelect = document.getElementById('player-count-select');
+const elStablesContainer = document.getElementById('stables-container');
+const elScoreBoardContainer = document.getElementById('score-board-container');
 const elCurrentRound = document.getElementById('current-round');
 
+// Modale Carte
 const elModal = document.getElementById('card-modal');
 const elCardTitle = document.getElementById('card-title');
 const elCardDesc = document.getElementById('card-desc');
 const elBtnCloseCard = document.getElementById('btn-close-card');
 
-const elPlayerCountSelect = document.getElementById('player-count-select');
-const elStablesContainer = document.getElementById('stables-container');
-const elScoreBoardContainer = document.getElementById('score-board-container');
-
+// --- EVENTS ---
 elBtnCloseCard.onclick = () => { 
     elModal.classList.add('hidden'); 
     resolvePendingCard(); 
@@ -85,6 +90,7 @@ elPlayerCountSelect.onchange = () => {
 
 elBtnStart.onclick = startGame;
 
+// --- INITIALISATION ---
 function startGame() {
     state.playerCount = parseInt(elPlayerCountSelect.value);
     
@@ -92,9 +98,13 @@ function startGame() {
     for(let i=1; i<=state.playerCount; i++) {
         const nameVal = document.getElementById(`input-p${i}`).value.trim();
         const name = nameVal || `Joueur ${i}`;
+        const typeSelect = document.getElementById(`type-p${i}`);
+        const type = typeSelect ? typeSelect.value : 'human';
+        
         state.players[i] = {
             id: i,
             name: name,
+            type: type,
             color: `p${i}`,
             points: 0,
             horses: createTeam(name, `p${i}`)
@@ -102,7 +112,6 @@ function startGame() {
     }
 
     buildUI();
-
     elSetupScreen.classList.add('hidden');
     elGameWrapper.classList.remove('hidden');
 
@@ -116,6 +125,7 @@ function buildUI() {
     elScoreBoardContainer.innerHTML = '';
     
     for(let i=1; i<=state.playerCount; i++) {
+        // Ecuries
         const stable = document.createElement('div');
         stable.className = 'stable-box';
         stable.id = `stable-p${i}`;
@@ -123,11 +133,12 @@ function buildUI() {
         const label = document.createElement('span');
         label.className = `stable-label p${i}-color`;
         label.id = `label-p${i}`;
-        label.innerText = `Écurie ${state.players[i].name}`;
+        label.innerText = state.players[i].name;
         
         stable.appendChild(label);
         elStablesContainer.appendChild(stable);
 
+        // Scores
         const span = document.createElement('span');
         span.className = `p${i}-text`;
         span.innerHTML = `<span id="score-name-p${i}">${state.players[i].name}</span>: <span id="global-score-p${i}">0</span> pts`;
@@ -161,6 +172,7 @@ function initGame() {
     updateMalusUI();
     elRoll.style.display = 'block';
     updateDiceUI('?', '?', false);
+    checkTurnType();
 }
 
 function initDeck() {
@@ -191,7 +203,16 @@ function drawBoard() {
         d.style.left = p.x + 'px'; d.style.top = p.y + 'px';
         d.setAttribute('data-idx', i);
         
-        if(i === 0) { d.classList.add('finish-line'); d.innerText = '🏁'; }
+        if(i === 0) { 
+            d.classList.add('start-line'); 
+            d.innerText = 'DÉPART';
+            d.style.zIndex = '1';
+        }
+        else if(i === TRACK_LEN - 1) { 
+            d.classList.add('finish-line'); 
+            d.innerText = '🏁';
+            d.style.zIndex = '5'; 
+        }
         else if(state.actionSquares.includes(i)) {
             d.classList.add('action-cell');
             d.innerText = '?';
@@ -211,16 +232,20 @@ function renderHorses() {
 
     elCurrentRound.innerText = state.currentRound;
     
+    // Scores dynamiques
     for(let i=1; i<=state.playerCount; i++) {
-        document.getElementById(`global-score-p${i}`).innerText = state.players[i].points;
+        const scoreEl = document.getElementById(`global-score-p${i}`);
+        if(scoreEl) scoreEl.innerText = state.players[i].points;
     }
 
+    // Écuries
     for(let pid=1; pid<=state.playerCount; pid++) {
         const stableEl = document.getElementById(`stable-p${pid}`);
-        const label = document.getElementById(`label-p${pid}`);
+        const currentLabel = document.getElementById(`label-p${pid}`);
         stableEl.innerHTML = ''; 
-        if(label) stableEl.appendChild(label);
-        else {
+        if(currentLabel) {
+            stableEl.appendChild(currentLabel);
+        } else {
              const newLabel = document.createElement('span');
              newLabel.id = `label-p${pid}`;
              newLabel.className = `stable-label p${pid}-color`;
@@ -234,6 +259,7 @@ function renderHorses() {
         stableEl.appendChild(list);
     }
 
+    // Chevaux sur la piste
     const occupancy = {}; 
     for(let pid=1; pid<=state.playerCount; pid++) {
         state.players[pid].horses.forEach(h => {
@@ -293,6 +319,8 @@ function renderHorses() {
     }
 }
 
+// --- LOGIQUE METIER ---
+
 function isSquareOccupied(idx) {
     let occ = false;
     for(let pid=1; pid<=state.playerCount; pid++) {
@@ -322,19 +350,24 @@ function drawCard(horse, dieValueUsed) {
     
     state.pendingCardState = { card, horse, dieValueUsed };
 
-    elCardTitle.innerText = card.name;
-    elCardDesc.innerText = card.desc;
-    elModal.classList.remove('hidden');
+    if(state.players[state.turn].type === 'bot') {
+        setTimeout(() => resolvePendingCard(true), 1000);
+    } else {
+        elCardTitle.innerText = card.name;
+        elCardDesc.innerText = card.desc;
+        elModal.classList.remove('hidden');
+    }
 }
 
-function resolvePendingCard() {
+function resolvePendingCard(isBot = false) {
     if(!state.pendingCardState) return;
     
     const { card, horse, dieValueUsed } = state.pendingCardState;
     state.pendingCardState = null;
 
     if (card.id === 'ENFERME') {
-        showEnfermeTargetSelection();
+        if(isBot) botPickEnfermeTarget();
+        else showEnfermeTargetSelection();
     } else {
         applyCardEffect(card, horse, dieValueUsed);
         checkEndOfMove();
@@ -342,35 +375,34 @@ function resolvePendingCard() {
 }
 
 function showEnfermeTargetSelection() {
-    const opponentId = state.turn === 1 ? 2 : 1;
-    // Si + de 2 joueurs, on cherche tous les adversaires
-    let opponentHorses = [];
-    for(let pid=1; pid<=state.playerCount; pid++) {
-        if(pid !== state.turn) {
-            opponentHorses = opponentHorses.concat(state.players[pid].horses.filter(h => h.status === 'racing'));
-        }
-    }
-
     document.getElementById('list-die-0').innerHTML = '';
     document.getElementById('list-die-1').innerHTML = '';
     elMsg.innerText = "CHOISISSEZ UNE CIBLE À ENFERMER :";
 
     const container = document.getElementById('list-die-0');
+    let targetsFound = false;
 
-    if (opponentHorses.length === 0) {
-        log("Aucun cheval adverse en piste à enfermer.");
-        checkEndOfMove();
-        return;
+    for(let pid=1; pid<=state.playerCount; pid++) {
+        if(pid === state.turn) continue;
+
+        const opponentHorses = state.players[pid].horses.filter(h => h.status === 'racing');
+        if(opponentHorses.length > 0) {
+            targetsFound = true;
+            opponentHorses.forEach(h => {
+                const btn = document.createElement('div');
+                btn.className = `choice-item target-btn`;
+                btn.style.cursor = "pointer";
+                btn.innerText = `BLOQUER ${h.name}`;
+                btn.onclick = () => applyEnferme(h.id);
+                container.appendChild(btn);
+            });
+        }
     }
 
-    opponentHorses.forEach(h => {
-        const btn = document.createElement('div');
-        btn.className = `choice-item target-btn`;
-        btn.style.cursor = "pointer";
-        btn.innerText = `BLOQUER ${h.name}`;
-        btn.onclick = () => applyEnferme(h.id);
-        container.appendChild(btn);
-    });
+    if (!targetsFound) {
+        log("Aucun cheval adverse en piste.");
+        checkEndOfMove();
+    }
 }
 
 function applyEnferme(targetId) {
@@ -387,8 +419,6 @@ function applyEnferme(targetId) {
 }
 
 function applyCardEffect(card, horse, dieValue) {
-    const oldPos = horse.pos;
-
     switch(card.id) {
         case 'DAI':
             horse.status = 'dai';
@@ -410,15 +440,13 @@ function applyCardEffect(card, horse, dieValue) {
             if(found) {
                 horse.pos = bestTarget - 1;
                 if(horse.pos < 0) horse.pos = 0;
-                log(`💨 Aspiration : ${horse.name} Case ${oldPos} ➝ Case ${horse.pos}`);
-            } else {
-                log("Personne devant à aspirer.");
-            }
+                log(`💨 Aspiration : ${horse.name} Case ${horse.pos}`);
+            } else log("Personne devant à aspirer.");
             break;
 
         case 'CRAVACHE':
             horse.pos += 3;
-            log(`⚡ Cravache (+3) : ${horse.name} Case ${oldPos} ➝ Case ${horse.pos}`);
+            log(`⚡ Cravache : ${horse.name} +3 cases.`);
             checkFinishLine(horse);
             break;
 
@@ -426,11 +454,9 @@ function applyCardEffect(card, horse, dieValue) {
             if(dieValue <= 3) {
                 const bonus = 6 - dieValue;
                 horse.pos += bonus;
-                log(`⚡ Déferré (Dé ${dieValue}➝6) : ${horse.name} Case ${oldPos} ➝ Case ${horse.pos} (+${bonus})`);
+                log(`⚡ Déferré : ${horse.name} +${bonus} cases.`);
                 checkFinishLine(horse);
-            } else {
-                log(`Déferré sans effet (Dé était ${dieValue}).`);
-            }
+            } else log(`Déferré sans effet.`);
             break;
     }
     renderHorses();
@@ -441,7 +467,7 @@ function checkFinishLine(horse) {
         horse.pos = 999; 
         horse.status = 'finished';
         state.finishedList.push(horse.id);
-        log(`🏁 ${horse.name} franchit la ligne grâce au bonus !`);
+        log(`🏁 ${horse.name} franchit la ligne !`);
     }
 }
 
@@ -475,7 +501,8 @@ function checkEndOfMove() {
     if(state.diceUsed[0] && state.diceUsed[1]) {
         setTimeout(endTurn, 1000);
     } else {
-        setTimeout(calculateMoves, 300);
+        if(state.players[state.turn].type === 'bot') setTimeout(botPlayNextMove, 1000);
+        else calculateMoves();
     }
 }
 
@@ -486,13 +513,14 @@ function calculatePoints() {
             for(let pid=1; pid<=state.playerCount; pid++) {
                 if(state.players[pid].horses.some(h => h.id === horseId)) {
                     state.players[pid].points += points[index];
-                    log(`🏆 ${state.players[pid].name} gagne ${points[index]} pts (${index+1}e place)`);
+                    log(`🏆 ${state.players[pid].name} gagne ${points[index]} pts`);
                 }
             }
         }
     });
 }
 
+// --- FONCTION AJOUTÉE/CORRIGÉE ICI ---
 function handleRaceFinish() {
     calculatePoints();
     renderHorses(); 
@@ -540,28 +568,46 @@ function startNextRound() {
     elRoll.style.display = 'block';
     updateDiceUI('?', '?', false);
     updateTurnIndicator();
+    checkTurnType();
 }
 
 function endMatch() {
-    const s1 = state.players[1].points;
-    const s2 = state.players[2].points;
-    let msg = `SCORE FINAL :\n${state.players[1].name} : ${s1} pts\n${state.players[2].name} : ${s2} pts\n\n`;
+    let winner = null;
+    let maxPts = -1;
+    let msg = "SCORE FINAL :\n";
     
-    if(s1 > s2) msg += `VICTOIRE DE ${state.players[1].name.toUpperCase()} ! 🏆`;
-    else if(s2 > s1) msg += `VICTOIRE DE ${state.players[2].name.toUpperCase()} ! 🏆`;
-    else msg += "ÉGALITÉ PARFAITE !";
+    for(let pid=1; pid<=state.playerCount; pid++) {
+        const pts = state.players[pid].points;
+        msg += `${state.players[pid].name} : ${pts} pts\n`;
+        if(pts > maxPts) {
+            maxPts = pts;
+            winner = state.players[pid].name;
+        } else if(pts === maxPts) {
+            winner = "ÉGALITÉ";
+        }
+    }
+    
+    msg += `\nVICTOIRE : ${winner} !`;
 
     state.gameOver = true;
     elMsg.innerText = "CHAMPIONNAT TERMINÉ";
+    
     elRoll.style.display = 'none';
+    elTurnInd.innerHTML = "FIN DE PARTIE";
+    elTurnInd.className = '';
+    updateDiceUI('', '', false);
+    document.getElementById('list-die-0').innerHTML = '';
+    document.getElementById('list-die-1').innerHTML = '';
+    
     alert(msg);
 }
+
+// --- TOUR DE JEU ---
 
 elRoll.onclick = () => {
     if(state.gameOver) return;
     
     if(!state.players[state.turn]) {
-        console.error("Bug: state.turn invalide. Reset to 1.");
         state.turn = 1;
     }
 
@@ -718,18 +764,39 @@ function endTurn() {
     if(state.turn > state.playerCount) state.turn = 1;
 
     updateMalusUI();
+    checkTurnType();
+}
+
+function checkTurnType() {
+    if(state.gameOver) return;
+
+    if(!state.players[state.turn]) {
+        state.turn = 1;
+    }
+
+    const currentPlayer = state.players[state.turn];
     updateTurnIndicator();
-    
     updateDiceUI('?', '?', false);
-    elMsg.innerText = "À vous !";
-    log(`--- Tour ${state.players[state.turn].name} ---`);
+
+    if (currentPlayer.type === 'bot') {
+        elMsg.innerText = "L'IA réfléchit...";
+        elRoll.disabled = true;
+        elRoll.style.display = 'block';
+        elRoll.innerText = "IA...";
+        setTimeout(playBotTurn, 1000);
+    } else {
+        elMsg.innerText = "À vous de jouer !";
+        elRoll.disabled = false;
+        elRoll.style.display = 'block';
+        elRoll.innerText = "LANCER LES DÉS";
+    }
 }
 
 function updateTurnIndicator() {
     if(!state.players[state.turn]) return;
     const nextName = state.players[state.turn].name;
     elTurnInd.innerText = `TOUR DE ${nextName.toUpperCase()}`;
-    elTurnInd.className = `bg-${state.players[state.turn].color}`; // Fix for CSS
+    elTurnInd.className = `bg-${state.players[state.turn].color}`;
 }
 
 function updateDiceUI(d1, d2, onlyStyle) {
@@ -749,4 +816,100 @@ function log(t) {
     const d = document.createElement('div');
     d.className = 'log-line'; d.innerText = t;
     elLog.prepend(d); 
+}
+
+// --- IA LOGIC ---
+function playBotTurn() {
+    state.dice = [Math.ceil(Math.random()*6), Math.ceil(Math.random()*6)];
+    state.diceUsed = [false, false];
+    state.movedHorses = []; 
+    
+    updateDiceUI(state.dice[0], state.dice[1], false);
+    log(`IA (${state.players[state.turn].name}) lance : [${state.dice[0]}] [${state.dice[1]}]`);
+    elRoll.style.display = 'none';
+
+    setTimeout(botPlayNextMove, 1000);
+}
+
+function botPlayNextMove() {
+    const p = state.players[state.turn];
+    let allPossibleMoves = [];
+
+    state.dice.forEach((val, dIdx) => {
+        if(state.diceUsed[dIdx]) return;
+
+        p.horses.forEach(h => {
+            if(state.movedHorses.includes(h.id) || h.status==='finished' || h.status==='dai') return;
+            
+            let type='', target=-1;
+            let blockedByEnferme = false;
+
+            if(h.id === state.lockedHorseId && h.status === 'racing') {
+                let someoneAhead = false;
+                for(let pid=1; pid<=state.playerCount; pid++) {
+                    state.players[pid].horses.forEach(other => {
+                        if(other.status === 'racing' && other.pos > h.pos) someoneAhead = true;
+                    });
+                }
+                if(someoneAhead) blockedByEnferme = true;
+            }
+
+            if(!blockedByEnferme) {
+                if(h.status === 'stable') {
+                    let rawTarget = val;
+                    if(checkOvertake(-1, rawTarget)) rawTarget -= 1;
+                    if(rawTarget < 0) rawTarget = 0;
+                    target = rawTarget;
+                    type = 'SORTIE';
+                } else {
+                    let rawTarget = h.pos + val;
+                    if(checkOvertake(h.pos, rawTarget)) rawTarget -= 1;
+                    target = rawTarget;
+                    if(target >= TRACK_LEN) type='FINISH'; else type='MOVE';
+                }
+                
+                allPossibleMoves.push({
+                    horse: h,
+                    dieIndex: dIdx,
+                    dieValue: val,
+                    targetPos: target,
+                    type: type,
+                    score: (type==='FINISH' ? 1000 : target) 
+                });
+            }
+        });
+    });
+
+    if(allPossibleMoves.length === 0) {
+        log("IA : Aucun mouvement possible.");
+        if(!state.diceUsed[0] && !state.diceUsed[1]) setTimeout(endTurn, 1500);
+        else setTimeout(endTurn, 1000);
+        return;
+    }
+
+    allPossibleMoves.sort((a, b) => b.score - a.score);
+    const bestMove = allPossibleMoves[0];
+
+    executeMove(bestMove.horse, bestMove.targetPos, bestMove.dieIndex, bestMove.type, bestMove.dieValue);
+}
+
+function botPickEnfermeTarget() {
+    let bestTargetId = null;
+    let maxPos = -999;
+    
+    for(let pid=1; pid<=state.playerCount; pid++) {
+        if(pid === state.turn) continue;
+        state.players[pid].horses.forEach(h => {
+            if(h.status === 'racing' && h.pos > maxPos) {
+                maxPos = h.pos;
+                bestTargetId = h.id;
+            }
+        });
+    }
+
+    if(bestTargetId) applyEnferme(bestTargetId);
+    else {
+        log("IA : Personne à enfermer.");
+        checkEndOfMove();
+    }
 }
